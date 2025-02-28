@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product List</title> 
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>.d-none { display: none; }</style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Product List</h1>
+        <input type="text" id="searchInput" class="form-control mb-4" placeholder="Search products...">
+        <div class="row" id="productsContainer"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const res = await fetch('https://layan-ki-api.vercel.app/api/products');
+            const products = await res.json();
+            const container = document.getElementById('productsContainer');
+            const searchInput = document.getElementById('searchInput');
+
+            const displayProducts = (data) => {
+                container.innerHTML = data.map(p => {
+                    let words = p.description.split(' '), shortDesc = words.slice(0, 2).join(' ');
+                    return `
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <img src="${p.image}" class="card-img-top" height="300">
+                                <div class="card-body">
+                                    <h5 class="card-title">${p.name}</h5>
+                                    <p class="card-text">${shortDesc} <span class="dots">...</span>
+                                    <span class="more-text d-none">${words.slice(2).join(' ')}</span></p>
+                                    <button class="btn btn-link p-0 toggle-description">View More</button>
+                                    <p class="card-text"><strong>Price:</strong> $${p.price}</p>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+                
+                document.querySelectorAll('.toggle-description').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const moreText = this.previousElementSibling.querySelector('.more-text');
+                        moreText.classList.toggle('d-none');
+                        this.textContent = moreText.classList.contains('d-none') ? 'View More' : 'View Less';
+                    });
+                });
+            };
+
+            displayProducts(products);
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                displayProducts(products.filter(p => p.name.toLowerCase().includes(searchTerm)));
+            });
+        });
+    </script>
+</body>
+</html>
